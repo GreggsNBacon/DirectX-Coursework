@@ -84,6 +84,9 @@ FragmentOutputPacket main(FragmentInputPacket v) {
 	FragmentOutputPacket outputFragment;
 	float tileRepeat = 10;
 	float3 colour=float3(0.0, 0.0, 0.0);
+	float3 colour1 = float3(0.25, 0.1, 0.05);
+	float3 green = float3(0, 0.5, 0);
+	float3 colour2 = float3(-0.1, -0.2, -0.3);
 	float alpha = 1.0;
 	float3 N = normalize(v.normalW);
 	colour = v.matDiffuse.xyz;
@@ -104,7 +107,20 @@ FragmentOutputPacket main(FragmentInputPacket v) {
 	}
 	else
 		colour *= float3(0.8, 0.8, 0.8);
-
+	float posY = v.posW.y;
+	if (posY <= -13 && posY >= -17) {
+		float lerpVal = (posY + 17) / 4;
+		float3 newColour = colour + colour1;
+		//colour = colour1;
+		colour = lerp(colour, newColour, 1 - lerpVal);
+	}
+	if (posY <= -17 && posY >= -20) {
+		colour = colour + colour1;
+		float lerpVal = (posY + 20) / 3;
+		float3 newColour = colour + colour2;
+		//colour = colour1;
+		colour = lerp(colour, newColour, 1 - lerpVal);
+	}
 	outputFragment.fragmentColour = float4(colour, alpha);
 	return outputFragment;
 

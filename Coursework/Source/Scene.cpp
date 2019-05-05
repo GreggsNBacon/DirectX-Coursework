@@ -101,6 +101,7 @@ HRESULT Scene::initialiseSceneResources() {
 
 	grassEffect->setBlendState(grassBlendState);
 	treeEffect->setBlendState(grassBlendState);
+	waterEffect->setBlendState(grassBlendState);
 
 	ID3D11DepthStencilState* grassDSstate = grassEffect->getDepthStencilState();
 	D3D11_DEPTH_STENCIL_DESC	dsDesc;// Setup default depth-stencil descriptor
@@ -137,7 +138,7 @@ HRESULT Scene::initialiseSceneResources() {
 	// Create a skybox
 	// The box class is derived from the BaseModel class 
 	box = new Box(device, skyBoxEffect, NULL, 0, skyBoxTextureArray,1);
-	box->setWorldMatrix(box->getWorldMatrix()*XMMatrixScaling(2000, 2000, 2000));
+	box->setWorldMatrix(box->getWorldMatrix()*XMMatrixScaling(4000, 4000, 4000));
 	box->update(context);
 
 
@@ -153,16 +154,16 @@ HRESULT Scene::initialiseSceneResources() {
 
 
 	//Water
-	water = new Grid(40, 40, device, waterEffect, NULL, 0, waterTextureArray, 2);
-	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-30, -5, -17));
+	water = new Grid(500, 500, device, waterEffect, NULL, 0, waterTextureArray, 2);
+	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-250, -19, -250));
 	water->update(context);
 
-	terrain = new Terrain(device, context, 100, 100, heightMap->getTexture(), normalMap->getTexture(), grassEffect, NULL, 0, grassTextureArray, 2);
-	terrain->setWorldMatrix(terrain->getWorldMatrix() * XMMatrixTranslation(-50, -0.7f, -50) * XMMatrixScaling(1, 5, 1));
+	terrain = new Terrain(device, context, 500, 500, heightMap->getTexture(), normalMap->getTexture(), grassEffect, NULL, 0, grassTextureArray, 2);
+	terrain->setWorldMatrix(terrain->getWorldMatrix() * XMMatrixTranslation(-250, -1, -250) * XMMatrixScaling(1, 20, 1));
 	terrain->update(context);
 
 	tree = new  Model(device, wstring(L"Resources\\Models\\tree.3ds"), treeEffect, NULL, 0, treeTextureArray, 1);
-	tree->setWorldMatrix(tree->getWorldMatrix()* XMMatrixTranslation(0, -4, 0));
+	tree->setWorldMatrix(tree->getWorldMatrix()* XMMatrixScaling(2, 2, 2) * XMMatrixTranslation(-25, -9, 10));
 	tree->update(context);
 
 	// Setup a camera
@@ -280,7 +281,7 @@ HRESULT Scene::renderScene() {
 		DrawGrass(context);
 	// Render tree
 	if (tree)
-		//tree->render(context);
+		tree->render(context);
 
 
 	// Present current frame to the screen

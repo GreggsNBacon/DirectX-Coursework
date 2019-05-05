@@ -1,5 +1,5 @@
 ﻿  Scene.cpp
-c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(182): warning C4305: 'argument' : truncation from 'double' to 'float'
 c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(183): warning C4305: 'argument' : truncation from 'double' to 'float'
-c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(244): warning C4244: '=' : conversion from 'double' to 'FLOAT', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(184): warning C4305: 'argument' : truncation from 'double' to 'float'
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(245): warning C4244: '=' : conversion from 'double' to 'FLOAT', possible loss of data
   DX11Proj.vcxproj -> C:\Users\Greg\Documents\Courseworks\DirectX Year 3\Coursework\Debug\DX11Proj.exe
