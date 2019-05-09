@@ -1,5 +1,15 @@
 ﻿  Scene.cpp
-c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(183): warning C4305: 'argument' : truncation from 'double' to 'float'
-c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(184): warning C4305: 'argument' : truncation from 'double' to 'float'
-c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(245): warning C4244: '=' : conversion from 'double' to 'FLOAT', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(54): warning C4244: 'argument' : conversion from 'time_t' to 'unsigned int', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(232): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(240): warning C4305: 'argument' : truncation from 'double' to 'float'
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(254): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(255): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(259): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(260): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(264): warning C4244: 'initializing' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(265): warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(284): warning C4305: 'argument' : truncation from 'double' to 'float'
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(285): warning C4305: 'argument' : truncation from 'double' to 'float'
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(346): warning C4244: '=' : conversion from 'double' to 'FLOAT', possible loss of data
+c:\users\greg\documents\courseworks\directx year 3\coursework\source\scene.cpp(452): warning C4244: 'initializing' : conversion from 'gu_seconds' to 'float', possible loss of data
   DX11Proj.vcxproj -> C:\Users\Greg\Documents\Courseworks\DirectX Year 3\Coursework\Debug\DX11Proj.exe

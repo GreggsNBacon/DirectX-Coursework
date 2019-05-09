@@ -108,15 +108,15 @@ FragmentOutputPacket main(FragmentInputPacket v) {
 	else
 		colour *= float3(0.8, 0.8, 0.8);
 	float posY = v.posW.y;
-	if (posY <= -13 && posY >= -17) {
-		float lerpVal = (posY + 17) / 4;
+	if (posY <= 3 && posY >= 0) {
+		float lerpVal = (posY) / 3;
 		float3 newColour = colour + colour1;
 		//colour = colour1;
 		colour = lerp(colour, newColour, 1 - lerpVal);
 	}
-	if (posY <= -17 && posY >= -20) {
+	if (posY <= 0 && posY >= -10) {
 		colour = colour + colour1;
-		float lerpVal = (posY + 20) / 3;
+		float lerpVal = (posY  + 10) / 10;
 		float3 newColour = colour + colour2;
 		//colour = colour1;
 		colour = lerp(colour, newColour, 1 - lerpVal);

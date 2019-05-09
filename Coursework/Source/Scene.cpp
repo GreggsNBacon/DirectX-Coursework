@@ -13,7 +13,7 @@
 #include <DirectXTK\WICTextureLoader.h>
 #include <CGDClock.h>
 #include <Scene.h>
-
+#include <ctime> 
 #include <Effect.h>
 #include <VertexStructures.h>
 #include <Texture.h>
@@ -50,6 +50,8 @@ HRESULT Scene::rebuildViewport(){
 
 // Main resource setup for the application.  These are setup around a given Direct3D device.
 HRESULT Scene::initialiseSceneResources() {
+
+	srand(time(NULL));
 	ID3D11DeviceContext *context = system->getDeviceContext();
 	ID3D11Device *device = system->getDevice();
 	if (!device)
@@ -68,7 +70,8 @@ HRESULT Scene::initialiseSceneResources() {
 	Effect *skyBoxEffect = new Effect(device, "Shaders\\cso\\sky_box_vs.cso", "Shaders\\cso\\sky_box_ps.cso", extVertexDesc, ARRAYSIZE(extVertexDesc));
 	Effect *grassEffect = new Effect(device, "Shaders\\cso\\grass_vs.cso", "Shaders\\cso\\grass_ps.cso", extVertexDesc, ARRAYSIZE(extVertexDesc));
 	Effect* treeEffect = new Effect(device, "Shaders\\cso\\tree_vs.cso", "Shaders\\cso\\tree_ps.cso", extVertexDesc, ARRAYSIZE(extVertexDesc));
-	
+	Effect* fireEffect = new Effect(device, "Shaders\\cso\\fire_vs.cso", "Shaders\\cso\\fire_ps.cso", particleVertexDesc, ARRAYSIZE(particleVertexDesc));
+	Effect* smokeEffect = new Effect(device, "Shaders\\cso\\fire_vs.cso", "Shaders\\cso\\fire_ps.cso", particleVertexDesc, ARRAYSIZE(particleVertexDesc));
 	// Add Code Here ( Load reflection_map_vs.cso and reflection_map_ps.cso  )
 
 	// The Effect class constructor sets default depth/stencil, rasteriser and blend states
@@ -82,26 +85,26 @@ HRESULT Scene::initialiseSceneResources() {
 	skyBoxEffect->setDepthStencilState(skyBoxDSState);
 
 	//grass blending
-	ID3D11BlendState* grassBlendState = grassEffect->getBlendState();
-	D3D11_BLEND_DESC grassBlendDesc;
-	ZeroMemory(&grassBlendDesc, sizeof(D3D11_BLEND_DESC));
-	grassBlendState->GetDesc(&grassBlendDesc);
+	ID3D11BlendState* transparencyBlendState = grassEffect->getBlendState();
+	D3D11_BLEND_DESC transparencyBlendDesc;
+	ZeroMemory(&transparencyBlendDesc, sizeof(D3D11_BLEND_DESC));
+	transparencyBlendState->GetDesc(&transparencyBlendDesc);
 
-	grassBlendDesc.AlphaToCoverageEnable = TRUE;
-	grassBlendDesc.IndependentBlendEnable = FALSE;
-	grassBlendDesc.RenderTarget[0].BlendEnable = TRUE;
-	grassBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	grassBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	grassBlendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	grassBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-	grassBlendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	grassBlendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	grassBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	grassBlendState->Release(); device->CreateBlendState(&grassBlendDesc, &grassBlendState);
+	transparencyBlendDesc.AlphaToCoverageEnable = TRUE;
+	transparencyBlendDesc.IndependentBlendEnable = FALSE;
+	transparencyBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	transparencyBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	transparencyBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	transparencyBlendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	transparencyBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+	transparencyBlendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	transparencyBlendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	transparencyBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	transparencyBlendState->Release(); device->CreateBlendState(&transparencyBlendDesc, &transparencyBlendState);
 
-	grassEffect->setBlendState(grassBlendState);
-	treeEffect->setBlendState(grassBlendState);
-	waterEffect->setBlendState(grassBlendState);
+	grassEffect->setBlendState(transparencyBlendState);
+	treeEffect->setBlendState(transparencyBlendState);
+	waterEffect->setBlendState(transparencyBlendState);
 
 	ID3D11DepthStencilState* grassDSstate = grassEffect->getDepthStencilState();
 	D3D11_DEPTH_STENCIL_DESC	dsDesc;// Setup default depth-stencil descriptor
@@ -110,6 +113,71 @@ HRESULT Scene::initialiseSceneResources() {
 	// Create custom grass depth-stencil state object
 	grassDSstate->Release(); device->CreateDepthStencilState(&dsDesc, &grassDSstate);
 	grassEffect->setDepthStencilState(grassDSstate);
+
+
+	//Fire Customisation
+	ID3D11BlendState* fireBlendState = fireEffect->getBlendState();
+	D3D11_BLEND_DESC fireBlendDesc;
+	fireBlendState->GetDesc(&fireBlendDesc);
+	fireBlendDesc.AlphaToCoverageEnable = FALSE; // Use pixel coverage info from rasteriser 
+	//Enable Alpha Blending
+	fireBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	fireBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	fireBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+
+	device->CreateBlendState(&fireBlendDesc, &fireBlendState);
+
+	fireBlendState->Release(); device->CreateBlendState(&fireBlendDesc, &fireBlendState);
+	fireEffect->setBlendState(fireBlendState);
+
+	// Customise fireEffect depth stencil state
+	// (depth-stencil state is initialised to default in effect constructor)
+	// Get the default depth-stencil state object 
+	ID3D11DepthStencilState* fireDSstate = fireEffect->getDepthStencilState();
+	D3D11_DEPTH_STENCIL_DESC	fireDsDesc;// Setup default depth-stencil descriptor
+	fireDSstate->GetDesc(&fireDsDesc);
+
+	// Disable Depth Writing 
+	fireDsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+
+	device->CreateDepthStencilState(&fireDsDesc, &fireDSstate);
+
+	// Create custom grass depth-stencil state object
+	fireDSstate->Release(); device->CreateDepthStencilState(&fireDsDesc, &fireDSstate);
+	fireEffect->setDepthStencilState(fireDSstate);
+
+	//Smoke Customisation
+	ID3D11BlendState* smokeBlendState = fireEffect->getBlendState();
+	D3D11_BLEND_DESC smokeBlendDesc;
+	smokeBlendState->GetDesc(&smokeBlendDesc);
+	smokeBlendDesc.AlphaToCoverageEnable = FALSE; // Use pixel coverage info from rasteriser 
+	//Enable Alpha Blending
+	smokeBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	smokeBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	smokeBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+
+	device->CreateBlendState(&smokeBlendDesc, &smokeBlendState);
+
+	smokeBlendState->Release(); device->CreateBlendState(&smokeBlendDesc, &smokeBlendState);
+	smokeEffect->setBlendState(smokeBlendState);
+
+	// Customise fireEffect depth stencil state
+	// (depth-stencil state is initialised to default in effect constructor)
+	// Get the default depth-stencil state object 
+	ID3D11DepthStencilState* smokeDSstate = smokeEffect->getDepthStencilState();
+	D3D11_DEPTH_STENCIL_DESC	smokeDsDesc;// Setup default depth-stencil descriptor
+	smokeDSstate->GetDesc(&smokeDsDesc);
+
+	// Disable Depth Writing 
+	smokeDsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+
+	device->CreateDepthStencilState(&smokeDsDesc, &smokeDSstate);
+
+	// Create custom grass depth-stencil state object
+	smokeDSstate->Release(); device->CreateDepthStencilState(&smokeDsDesc, &smokeDSstate);
+	smokeEffect->setDepthStencilState(smokeDSstate);
+
+
 	// Setup Textures
 	// The Texture class is a helper class to load textures
 	Texture* cubeDayTexture = new Texture(device, L"Resources\\Textures\\grassenvmap1024.dds");
@@ -119,14 +187,20 @@ HRESULT Scene::initialiseSceneResources() {
 	Texture* grassTexture = new Texture(device, L"Resources\\Textures\\grass.png");
 	Texture* grassAlpha = new Texture(device, L"Resources\\Textures\\grassAlpha.tif");
 	Texture* treeTexture = new Texture(device, L"Resources\\Textures\\tree.tif");
-
-
+	Texture* castleTexture = new Texture(device, L"Resources\\Textures\\castle.jpg");
+	Texture* fireTexture = new Texture(device, L"Resources\\Textures\\Fire.tif");
+	Texture* smokeTexture = new Texture(device, L"Resources\\Textures\\smoke.tif");
+	Texture* logsTexture = new Texture(device, L"Resources\\Textures\\logs.jpg");
 	// The BaseModel class supports multitexturing and the constructor takes a pointer to an array of shader resource views of textures. 
 	// Even if we only need 1 texture/shader resource view for an effect we still need to create an array.
 	ID3D11ShaderResourceView *skyBoxTextureArray[] = { cubeDayTexture->getShaderResourceView()};
 	ID3D11ShaderResourceView *waterTextureArray[] = { wavesTexture->getShaderResourceView(), cubeDayTexture->getShaderResourceView()};
 	ID3D11ShaderResourceView *grassTextureArray[] = { grassTexture->getShaderResourceView(), grassAlpha->getShaderResourceView() };
 	ID3D11ShaderResourceView *treeTextureArray[] = { treeTexture->getShaderResourceView() };
+	ID3D11ShaderResourceView* castleTextureArray[] = { castleTexture->getShaderResourceView() };
+	ID3D11ShaderResourceView* fireTextureArray[] = { fireTexture->getShaderResourceView() };
+	ID3D11ShaderResourceView* smokeTextureArray[] = { smokeTexture->getShaderResourceView() };
+	ID3D11ShaderResourceView* logsTextureArray[] = { logsTexture->getShaderResourceView() };
 
 	// Setup Objects - the object below are derived from the Base model class
 	// The constructors for all objects derived from BaseModel require at least a valid pointer to the main DirectX device
@@ -135,43 +209,70 @@ HRESULT Scene::initialiseSceneResources() {
 	// The baseModel class now manages a CBuffer containing model/world matrix properties. It has methods to update the cbuffers if the model/world changes 
 	// The render methods of the objects attatch the world/model Cbuffers to the pipeline at slot b0 for vertex and pixel shaders
 	
-	// Create a skybox
-	// The box class is derived from the BaseModel class 
+	//MATERIALS
+	Material mattMaterial;
+	mattMaterial.setSpecular(XMCOLOR(0, 0, 0, 0));
+	Material* mattMaterialArr[] = { &mattMaterial };
+
+
+	//OBJECTS
 	box = new Box(device, skyBoxEffect, NULL, 0, skyBoxTextureArray,1);
 	box->setWorldMatrix(box->getWorldMatrix()*XMMatrixScaling(4000, 4000, 4000));
 	box->update(context);
 
-
-	// Add a chrome  sphere to reflect the skybox
-	// The Model class is derived from the BaseModel class with an additional load method 
-	// that loads 3d data from a file
-	// The load method makes use of the ASSIMP (open ASSet IMPort) Library for loading 
-	// 3d data http://assimp.sourceforge.net/.
 	orb = new  Model(device, wstring(L"Resources\\Models\\sphere.3ds"), reflectionEffect, NULL, 0, skyBoxTextureArray, 1);
-	//Raise orb off the ground
 	orb->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(0, 2, 0));
 	orb->update(context);
 
-
-	//Water
 	water = new Grid(500, 500, device, waterEffect, NULL, 0, waterTextureArray, 2);
-	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-250, -19, -250));
+	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-250, -2, -250));
 	water->update(context);
 
+	castle = new  Model(device, wstring(L"Resources\\Models\\castle.3ds"), perPixelLightingEffect, mattMaterialArr, 1, castleTextureArray, 1);
+	castle->setWorldMatrix(castle->getWorldMatrix()* XMMatrixScaling(10, 10, 10)* XMMatrixRotationY(XMConvertToRadians(rand() % 360))* XMMatrixTranslation(-40, 9, 0));
+	castle->update(context);
+
 	terrain = new Terrain(device, context, 500, 500, heightMap->getTexture(), normalMap->getTexture(), grassEffect, NULL, 0, grassTextureArray, 2);
-	terrain->setWorldMatrix(terrain->getWorldMatrix() * XMMatrixTranslation(-250, -1, -250) * XMMatrixScaling(1, 20, 1));
+	terrain->setWorldMatrix(terrain->getWorldMatrix() * XMMatrixScaling(1, 20, 1) * XMMatrixTranslation(-250, -2, -250));
 	terrain->update(context);
 
-	tree = new  Model(device, wstring(L"Resources\\Models\\tree.3ds"), treeEffect, NULL, 0, treeTextureArray, 1);
-	tree->setWorldMatrix(tree->getWorldMatrix()* XMMatrixScaling(2, 2, 2) * XMMatrixTranslation(-25, -9, 10));
-	tree->update(context);
+	logs = new  Model(device, wstring(L"Resources\\Models\\logs.obj"), perPixelLightingEffect, mattMaterialArr, 1, logsTextureArray, 1);
+	logs->setWorldMatrix(logs->getWorldMatrix()* XMMatrixScaling(0.005, 0.005, 0.005)* XMMatrixRotationX(XMConvertToRadians(-90))* XMMatrixTranslation(-40, 9, 20));
+	logs->update(context);
+
+	fire = new ParticleSystem(device, fireEffect, NULL, 0, fireTextureArray, 1);
+	fire->setWorldMatrix(fire->getWorldMatrix()* XMMatrixScaling(4, 5, 4)* XMMatrixTranslation(-40, 11, 20));
+	fire->update(context);
+
+	smoke = new ParticleSystem(device, smokeEffect, NULL, 0, smokeTextureArray, 1);
+	smoke->setWorldMatrix(smoke->getWorldMatrix()* XMMatrixScaling(7, 10, 7)* XMMatrixTranslation(-40, 14, 20));
+	smoke->update(context);
+
+	int tempRandomCounter = 0;
+	while (tempRandomCounter < numOfTrees) {
+		XMFLOAT3 temp;
+		temp.x = rand() % 480 - 240;
+		temp.z = rand() % 480 - 240;
+		temp.y = terrain->CalculateYValueWorld(temp.x, temp.z);
+		while((temp.y < treeHeight) || ((temp.x > -90 && temp.x < 3 ) && (temp.z > -60 && temp.z < 70)))
+		{
+				temp.x = rand() % 480 - 240;
+				temp.y = rand() % 480 - 240;
+				temp.y = terrain->CalculateYValueWorld(temp.x, temp.z);
+		}
+		trees[tempRandomCounter] = new  Model(device, wstring(L"Resources\\Models\\tree.3ds"), treeEffect, NULL, 0, treeTextureArray, 1);
+		float scale = rand() % 6 + 1;
+		trees[tempRandomCounter]->setWorldMatrix(trees[tempRandomCounter]->getWorldMatrix()* XMMatrixScaling(scale, scale, scale)* XMMatrixRotationY(XMConvertToRadians(rand() % 360))* XMMatrixTranslation(temp.x, temp.y + 0.1f, temp.z));
+		trees[tempRandomCounter]->update(context);
+		tempRandomCounter++;
+	}
 
 	// Setup a camera
 	// The LookAtCamera is derived from the base Camera class. The constructor for the Camera class requires a valid pointer to the main DirectX device
 	// and and 3 vectors to define the initial position, up vector and target for the camera.
 	// The camera class  manages a Cbuffer containing view/projection matrix properties. It has methods to update the cbuffers if the camera moves changes  
 	// The camera constructor and update methods also attaches the camera CBuffer to the pipeline at slot b1 for vertex and pixel shaders
-	mainCamera =  new LookAtCamera(device, XMVectorSet(0.0, 0.0, -10.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), XMVectorZero());
+	mainCamera =  new FirstPersonCamera(device, XMVectorSet(0.0, 0.0, -10.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), XMVectorZero());
 
 
 	// Add a CBuffer to store light properties - you might consider creating a Light Class to manage this CBuffer
@@ -275,15 +376,33 @@ HRESULT Scene::renderScene() {
 	// Render Orb
 	if (water)
 		water->render(context);
+	if (castle)
+		castle->render(context);
 
 	//Render Terrain
 	if (terrain)
 		DrawGrass(context);
 	// Render tree
-	if (tree)
-		tree->render(context);
+	for (int i = 0; i < numOfTrees; i++) {
+		if (trees[i])
+			trees[i]->render(context);
+	}
+	// Render logs
+	if (logs)
+		logs->render(context);
 
+	// Render fire
+	if (fire)
+		fire->render(context);
 
+	if (smoke)
+	{
+		cBufferSceneCPU->Time *= 0.5;
+		mapCbuffer(context, cBufferSceneCPU, cBufferSceneGPU, sizeof(CBufferScene));
+		smoke->render(context);
+	}
+
+	updateCameraInput();
 	// Present current frame to the screen
 	HRESULT hr = system->presentBackBuffer();
 
@@ -294,16 +413,7 @@ HRESULT Scene::renderScene() {
 // Event handling methods
 //
 // Process mouse move with the left button held down
-void Scene::handleMouseLDrag(const POINT &disp) {
-	//LookAtCamera
 
-	mainCamera->rotateElevation((float)-disp.y * 0.01f);
-	mainCamera->rotateOnYAxis((float)-disp.x * 0.01f);
-
-	//FirstPersonCamera
-	//	mainCamera->elevate((float)-disp.y * 0.01f);
-	//	mainCamera->turn((float)-disp.x * 0.01f);
-}
 void Scene::DrawGrass(ID3D11DeviceContext* context)
 {
 	// Draw the Grass
@@ -318,27 +428,77 @@ void Scene::DrawGrass(ID3D11DeviceContext* context)
 		}
 	}
 }
+void Scene::handleMouseLDrag(const POINT& disp) {
+	mainCamera->updateRotation((float)+disp.x * 0.007f, (float)+disp.y * 0.007f);
+}
 // Process mouse wheel movement
 void Scene::handleMouseWheel(const short zDelta) {
 	//LookAtCamera
 
-	if (zDelta<0)
-		mainCamera->zoomCamera(1.2f);
-	else if (zDelta>0)
-		mainCamera->zoomCamera(0.9f);
-	cout << "zoom" << endl;
+	//if (zDelta<0)
+	//	mainCamera->zoomCamera(1.2f);
+	//else if (zDelta>0)
+	//	mainCamera->zoomCamera(0.9f);
+	//cout << "zoom" << endl;
 	//FirstPersonCamera
 	//mainCamera->move(zDelta*0.01);
 }
 
 // Process key down event.  keyCode indicates the key pressed while extKeyFlags indicates the extended key status at the time of the key down event (see http://msdn.microsoft.com/en-gb/library/windows/desktop/ms646280%28v=vs.85%29.aspx).
-void Scene::handleKeyDown(const WPARAM keyCode, const LPARAM extKeyFlags) {
-	// Add key down handler here...
-}
 
+
+void Scene::updateCameraInput() {
+
+	float spf = mainClock->averageSPF();
+	float speed = 0.0f;
+	if (spf < 1000) {
+		speed = 15.0f* spf;
+	}
+
+	if (aKey)
+	{
+		mainCamera->moveLeftRight -= speed;
+	}
+	if (dKey)
+	{
+		mainCamera->moveLeftRight += speed;
+	}
+	if (wKey)
+	{
+		mainCamera->moveBackForward += speed;
+	}
+	if (sKey)
+	{
+		mainCamera->moveBackForward -= speed;
+	}
+	if (cKey)
+	{
+		mainCamera->moveUp -= speed;
+	}
+	if (SpaceKey)
+	{
+		mainCamera->moveUp += speed;
+	}
+	mainCamera->UpdateCamera();
+}
+void Scene::handleKeyDown(const WPARAM keyCode, const LPARAM extKeyFlags) {
+	if (keyCode == 87) wKey = true;
+	if (keyCode == 83) sKey = true;
+	if (keyCode == 65) aKey = true;
+	if (keyCode == 68) dKey = true;
+	if (keyCode == 32) SpaceKey = true;
+	if (keyCode == 67) cKey = true;
+}
 // Process key up event.  keyCode indicates the key released while extKeyFlags indicates the extended key status at the time of the key up event (see http://msdn.microsoft.com/en-us/library/windows/desktop/ms646281%28v=vs.85%29.aspx).
 void Scene::handleKeyUp(const WPARAM keyCode, const LPARAM extKeyFlags) {
-	// Add key up handler here...
+
+	if (keyCode == 87) wKey = false;
+	if (keyCode == 83) sKey = false;
+	if (keyCode == 65) aKey = false;
+	if (keyCode == 68) dKey = false;
+	if (keyCode == 32) SpaceKey = false;
+	if (keyCode == 67) cKey = false;
+
 }
 
 // Clock handling methods

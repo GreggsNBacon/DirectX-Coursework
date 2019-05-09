@@ -77,12 +77,22 @@ vertexOutputPacket main(vertexInputPacket inputVertex) {
 	outputVertex.texCoord = inputVertex.texCoord;
 	// Finally transform/project pos to screen/clip space posH
 	float3 pos = inputVertex.pos;
-		pos.y += grassHeight*grassScaleFactor;
+
+	float posY = inputVertex.pos.y;
+	if(posY <= 0.5 && posY >= 0.1f){
+		grassScaleFactor = (posY / 0.4) * grassScaleFactor;
+	}
+	else {
+		grassScaleFactor = 1.0f;
+	}
+	if (posY > 0.1) {
+		pos.y += grassHeight * grassScaleFactor;
 
 
-	float k = pow(grassHeight*100, 3);
-	float3 gWindDir = float3(sin(Time)*0.01, 0, 0);
-		pos = pos + gWindDir*k;
+		float k = pow(grassHeight * 100, 3);
+		float3 gWindDir = float3(sin(Time) * 0.01, 0, 0);
+		pos = pos + gWindDir * k;
+	}
 	outputVertex.posH = mul(float4(pos, 1.0), WVP);
 
 	return outputVertex;

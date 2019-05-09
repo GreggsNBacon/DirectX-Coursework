@@ -13,8 +13,10 @@
 #include <Model.h>
 #include <Box.h>
 #include <Grid.h>
+#include <ParticleSystem.h>
 #include <CBufferStructures.h>
 #include <Terrain.h>
+#include "FirstPersonCamera.h"
 
 
 class Scene{// : public GUObject {
@@ -27,7 +29,7 @@ class Scene{// : public GUObject {
 
 	D3D11_VIEWPORT							viewport;
 	CGDClock								*mainClock;
-	LookAtCamera							*mainCamera;
+	FirstPersonCamera						*mainCamera;
 
 	CBufferScene* cBufferSceneCPU = nullptr;
 	ID3D11Buffer *cBufferSceneGPU = nullptr;
@@ -41,9 +43,24 @@ class Scene{// : public GUObject {
 	BaseModel								*orb = nullptr;
 	Grid									*water = nullptr;
 	Terrain									*terrain = nullptr;
-	Model									*tree = nullptr;
+	static const int						numOfTrees = 1500;
+	Model									*trees[numOfTrees];
+	Model									*castle = nullptr;
+	Model* logs = nullptr;
+	ParticleSystem* fire = nullptr;
+	ParticleSystem* smoke = nullptr;
+	float									treeHeight = 0;
 	float									grassLength = 0.01f;
 	int										numGrassPasses = 50;
+
+	bool wKey = false;
+	bool sKey = false;
+	bool aKey = false;
+	bool dKey = false;
+	bool SpaceKey = false;
+	bool cKey = false;
+
+
 	// Private constructor
 	Scene(const LONG _width, const LONG _height, const wchar_t* wndClassName, const wchar_t* wndTitle, int nCmdShow, HINSTANCE hInstance, WNDPROC WndProc);
 	// Return TRUE if the window is in a minimised state, FALSE otherwise
@@ -68,6 +85,7 @@ public:
 
 	// Event handling methods
 	// Process mouse move with the left button held down
+	void updateCameraInput();
 	void handleMouseLDrag(const POINT &disp);
 	// Process mouse wheel movement
 	void handleMouseWheel(const short zDelta);

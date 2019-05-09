@@ -70,31 +70,27 @@ SamplerState linearSampler : register(s0);
 // Pixel Shader - Lighting 
 //-----------------------------------------------------------------
 
-FragmentOutputPacket main(FragmentInputPacket v) { 
-
+FragmentOutputPacket main(FragmentInputPacket v) {
 	FragmentOutputPacket outputFragment;
-	bool useTexture = false;
 
 	float3 N = normalize(v.normalW);
 	float4 baseColour = v.matDiffuse;
-	
-	if (useTexture)
-		baseColour = baseColour * diffuseTexture.Sample(linearSampler, v.texCoord);
-		//Initialise returned colour to ambient component
-	float3 colour = baseColour.xyz* lightAmbient;
+	baseColour = baseColour * diffuseTexture.Sample(linearSampler, v.texCoord);
+	//Initialise returned colour to ambient component
+	float3 colour = baseColour.xyz * lightAmbient;
 	// Calculate the lambertian term (essentially the brightness of the surface point based on the dot product of the normal vector with the vector pointing from v to the light source's location)
 	float3 lightDir = -lightVec.xyz; // Directional light
-	if (lightVec.w == 1.0) lightDir =lightVec.xyz - v.posW; // Positional light
-	lightDir=normalize(lightDir);
+	if (lightVec.w == 1.0) lightDir = lightVec.xyz - v.posW; // Positional light
+	lightDir = normalize(lightDir);
 	// Add diffuse light if relevant (otherwise we end up just returning the ambient light colour)
 	// Add Code Here (Add diffuse light calculation)
-	colour += max(dot(lightDir, N), 0.0f) *baseColour.xyz * lightDiffuse;
+	colour += max(dot(lightDir, N), 0.0f) * baseColour.xyz * lightDiffuse;
 
 	// Calc specular light
-	float specPower = max(v.matSpecular.a*1000.0, 1.0f);
+	float specPower = max(v.matSpecular.a * 1000.0, 1.0f);
 
 	float3 eyeDir = normalize(eyePos - v.posW);
-	float3 R = reflect(-lightDir,N );
+	float3 R = reflect(-lightDir, N);
 
 	// Add Code Here (Specular Factor calculation)	
 	float specFactor = pow(max(dot(R, eyeDir), 0.0f), specPower);
