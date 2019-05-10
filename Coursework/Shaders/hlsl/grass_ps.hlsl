@@ -89,7 +89,26 @@ FragmentOutputPacket main(FragmentInputPacket v) {
 	float3 colour2 = float3(-0.1, -0.2, -0.3);
 	float alpha = 1.0;
 	float3 N = normalize(v.normalW);
-	colour = v.matDiffuse.xyz;
+	float4 baseColour = v.matDiffuse;
+	baseColour = baseColour * diffuseTexture.Sample(anisotropicSampler, v.texCoord);
+	//Initialise returned colour to ambient component
+	colour = baseColour.xyz * lightAmbient;
+	// Calculate the lambertian term (essentially the brightness of the surface point based on the dot product of the normal vector with the vector pointing from v to the light source's location)
+	float3 lightDir = -lightVec.xyz; // Directional light
+	if (lightVec.w == 1.0) lightDir = lightVec.xyz - v.posW; // Positional light
+	lightDir = normalize(lightDir);
+	// Add diffuse light if relevant (otherwise we end up just returning the ambient light colour)
+	colour += max(dot(lightDir, N), 0.0f) * baseColour.xyz * lightDiffuse;
+
+	// Calc specular light
+	float specPower = max(v.matSpecular.a * 1000.0, 1.0f);
+
+	float3 eyeDir = normalize(eyePos - v.posW);
+	float3 R = reflect(-lightDir, N);
+
+	// Add Code Here (Specular Factor calculation)	
+	float specFactor = pow(max(dot(R, eyeDir), 0.0f), specPower);
+	colour += specFactor * v.matSpecular.xyz * lightSpecular;
 	colour *= diffuseTexture.Sample(anisotropicSampler, v.texCoord);
 
 	if (grassHeight > 0.0)

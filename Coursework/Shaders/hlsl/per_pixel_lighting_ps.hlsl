@@ -84,7 +84,6 @@ FragmentOutputPacket main(FragmentInputPacket v) {
 	if (lightVec.w == 1.0) lightDir = lightVec.xyz - v.posW; // Positional light
 	lightDir = normalize(lightDir);
 	// Add diffuse light if relevant (otherwise we end up just returning the ambient light colour)
-	// Add Code Here (Add diffuse light calculation)
 	colour += max(dot(lightDir, N), 0.0f) * baseColour.xyz * lightDiffuse;
 
 	// Calc specular light

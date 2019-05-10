@@ -223,12 +223,12 @@ HRESULT Scene::initialiseSceneResources() {
 	box->setWorldMatrix(box->getWorldMatrix()*XMMatrixScaling(4000, 4000, 4000));
 	box->update(context);
 
-	orb = new  Model(device, wstring(L"Resources\\Models\\sphere.3ds"), reflectionEffect, NULL, 0, skyBoxTextureArray, 1);
-	orb->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(0, 2, 0));
+	orb = new  Model(device, wstring(L"Resources\\Models\\Shark.obj"), reflectionEffect, NULL, 0, skyBoxTextureArray, 1);
+	orb->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(10, 0, 0));
 	orb->update(context);
 
 	water = new Grid(500, 500, device, waterEffect, NULL, 0, waterTextureArray, 2);
-	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-250, -2, -250));
+	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-250, 0, -250));
 	water->update(context);
 
 	castle = new  Model(device, wstring(L"Resources\\Models\\castle.3ds"), normalMapEffect, mattMaterialArr, 1, castleTextureArray, 2);
@@ -283,7 +283,7 @@ HRESULT Scene::initialiseSceneResources() {
 	cBufferLightCPU = (CBufferLight *)_aligned_malloc(sizeof(CBufferLight), 16);
 
 	// Fill out cBufferLightCPU
-	cBufferLightCPU->lightVec = XMFLOAT4(-5.0, 2.0, 5.0, 1.0);
+	cBufferLightCPU->lightVec = XMFLOAT4(-5.0, 15.0, 5.0, 1.0);
 	cBufferLightCPU->lightAmbient = XMFLOAT4(0.2, 0.2, 0.2, 1.0);
 	cBufferLightCPU->lightDiffuse = XMFLOAT4(0.7, 0.7, 0.7, 1.0);
 	cBufferLightCPU->lightSpecular = XMFLOAT4(0.5, 0.5, 0.5, 0.5);
