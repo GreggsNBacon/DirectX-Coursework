@@ -72,6 +72,7 @@ HRESULT Scene::initialiseSceneResources() {
 	Effect* treeEffect = new Effect(device, "Shaders\\cso\\tree_vs.cso", "Shaders\\cso\\tree_ps.cso", extVertexDesc, ARRAYSIZE(extVertexDesc));
 	Effect* fireEffect = new Effect(device, "Shaders\\cso\\fire_vs.cso", "Shaders\\cso\\fire_ps.cso", particleVertexDesc, ARRAYSIZE(particleVertexDesc));
 	Effect* smokeEffect = new Effect(device, "Shaders\\cso\\fire_vs.cso", "Shaders\\cso\\fire_ps.cso", particleVertexDesc, ARRAYSIZE(particleVertexDesc));
+	Effect* normalMapEffect = new Effect(device, "Shaders\\cso\\normal_map_ppl_vs.cso", "Shaders\\cso\\normal_map_ppl_ps.cso", extVertexDesc, ARRAYSIZE(extVertexDesc));
 	// Add Code Here ( Load reflection_map_vs.cso and reflection_map_ps.cso  )
 
 	// The Effect class constructor sets default depth/stencil, rasteriser and blend states
@@ -188,19 +189,21 @@ HRESULT Scene::initialiseSceneResources() {
 	Texture* grassAlpha = new Texture(device, L"Resources\\Textures\\grassAlpha.tif");
 	Texture* treeTexture = new Texture(device, L"Resources\\Textures\\tree.tif");
 	Texture* castleTexture = new Texture(device, L"Resources\\Textures\\castle.jpg");
+	Texture* castleNormalTexture = new Texture(device, L"Resources\\Textures\\castle_normal.jpg");
 	Texture* fireTexture = new Texture(device, L"Resources\\Textures\\Fire.tif");
 	Texture* smokeTexture = new Texture(device, L"Resources\\Textures\\smoke.tif");
 	Texture* logsTexture = new Texture(device, L"Resources\\Textures\\logs.jpg");
+	Texture* logsNormalTexture = new Texture(device, L"Resources\\Textures\\logs_normal.jpg");
 	// The BaseModel class supports multitexturing and the constructor takes a pointer to an array of shader resource views of textures. 
 	// Even if we only need 1 texture/shader resource view for an effect we still need to create an array.
 	ID3D11ShaderResourceView *skyBoxTextureArray[] = { cubeDayTexture->getShaderResourceView()};
 	ID3D11ShaderResourceView *waterTextureArray[] = { wavesTexture->getShaderResourceView(), cubeDayTexture->getShaderResourceView()};
 	ID3D11ShaderResourceView *grassTextureArray[] = { grassTexture->getShaderResourceView(), grassAlpha->getShaderResourceView() };
 	ID3D11ShaderResourceView *treeTextureArray[] = { treeTexture->getShaderResourceView() };
-	ID3D11ShaderResourceView* castleTextureArray[] = { castleTexture->getShaderResourceView() };
+	ID3D11ShaderResourceView* castleTextureArray[] = { castleTexture->getShaderResourceView(), castleNormalTexture->getShaderResourceView() };
 	ID3D11ShaderResourceView* fireTextureArray[] = { fireTexture->getShaderResourceView() };
 	ID3D11ShaderResourceView* smokeTextureArray[] = { smokeTexture->getShaderResourceView() };
-	ID3D11ShaderResourceView* logsTextureArray[] = { logsTexture->getShaderResourceView() };
+	ID3D11ShaderResourceView* logsTextureArray[] = { logsTexture->getShaderResourceView() , logsNormalTexture->getShaderResourceView()};
 
 	// Setup Objects - the object below are derived from the Base model class
 	// The constructors for all objects derived from BaseModel require at least a valid pointer to the main DirectX device
@@ -228,7 +231,7 @@ HRESULT Scene::initialiseSceneResources() {
 	water->setWorldMatrix(orb->getWorldMatrix()*XMMatrixTranslation(-250, -2, -250));
 	water->update(context);
 
-	castle = new  Model(device, wstring(L"Resources\\Models\\castle.3ds"), perPixelLightingEffect, mattMaterialArr, 1, castleTextureArray, 1);
+	castle = new  Model(device, wstring(L"Resources\\Models\\castle.3ds"), normalMapEffect, mattMaterialArr, 1, castleTextureArray, 2);
 	castle->setWorldMatrix(castle->getWorldMatrix()* XMMatrixScaling(10, 10, 10)* XMMatrixRotationY(XMConvertToRadians(rand() % 360))* XMMatrixTranslation(-40, 9, 0));
 	castle->update(context);
 
@@ -236,7 +239,7 @@ HRESULT Scene::initialiseSceneResources() {
 	terrain->setWorldMatrix(terrain->getWorldMatrix() * XMMatrixScaling(1, 20, 1) * XMMatrixTranslation(-250, -2, -250));
 	terrain->update(context);
 
-	logs = new  Model(device, wstring(L"Resources\\Models\\logs.obj"), perPixelLightingEffect, mattMaterialArr, 1, logsTextureArray, 1);
+	logs = new  Model(device, wstring(L"Resources\\Models\\logs.obj"), normalMapEffect, mattMaterialArr, 1, logsTextureArray, 2);
 	logs->setWorldMatrix(logs->getWorldMatrix()* XMMatrixScaling(0.005, 0.005, 0.005)* XMMatrixRotationX(XMConvertToRadians(-90))* XMMatrixTranslation(-40, 9, 20));
 	logs->update(context);
 
@@ -272,7 +275,7 @@ HRESULT Scene::initialiseSceneResources() {
 	// and and 3 vectors to define the initial position, up vector and target for the camera.
 	// The camera class  manages a Cbuffer containing view/projection matrix properties. It has methods to update the cbuffers if the camera moves changes  
 	// The camera constructor and update methods also attaches the camera CBuffer to the pipeline at slot b1 for vertex and pixel shaders
-	mainCamera =  new FirstPersonCamera(device, XMVectorSet(0.0, 0.0, -10.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), XMVectorZero());
+	mainCamera =  new FirstPersonCamera(device, XMVectorSet(0.0, 9.0, -10.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), XMVectorZero());
 
 
 	// Add a CBuffer to store light properties - you might consider creating a Light Class to manage this CBuffer
@@ -283,7 +286,7 @@ HRESULT Scene::initialiseSceneResources() {
 	cBufferLightCPU->lightVec = XMFLOAT4(-5.0, 2.0, 5.0, 1.0);
 	cBufferLightCPU->lightAmbient = XMFLOAT4(0.2, 0.2, 0.2, 1.0);
 	cBufferLightCPU->lightDiffuse = XMFLOAT4(0.7, 0.7, 0.7, 1.0);
-	cBufferLightCPU->lightSpecular = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	cBufferLightCPU->lightSpecular = XMFLOAT4(0.5, 0.5, 0.5, 0.5);
 
 	// Create GPU resource memory copy of cBufferLight
 	// fill out description (Note if we want to update the CBuffer we need  D3D11_CPU_ACCESS_WRITE)
@@ -326,7 +329,7 @@ HRESULT Scene::initialiseSceneResources() {
 	mapCbuffer(context, cBufferSceneCPU, cBufferSceneGPU, sizeof(CBufferScene));
 	context->VSSetConstantBuffers(3, 1, &cBufferSceneGPU);// Attach CBufferSceneGPU to register b3 for the vertex shader. Not strictly needed as our vertex shader doesnt require access to this CBuffer
 	context->PSSetConstantBuffers(3, 1, &cBufferSceneGPU);// Attach CBufferSceneGPU to register b3 for the Pixel shader
-
+	
 	return S_OK;
 }
 
@@ -345,7 +348,8 @@ HRESULT Scene::updateScene(ID3D11DeviceContext *context,Camera *camera) {
 	// Update the scene time as it is needed to animate the water
 	cBufferSceneCPU->Time = gT;
 	mapCbuffer(context, cBufferSceneCPU, cBufferSceneGPU, sizeof(CBufferScene));
-	
+	cout << "AVG SPF - " << mainClock->averageSPF() << endl;
+	cout << "AVG FPS - " << mainClock->averageFPS() << endl; 
 	return S_OK;
 }
 

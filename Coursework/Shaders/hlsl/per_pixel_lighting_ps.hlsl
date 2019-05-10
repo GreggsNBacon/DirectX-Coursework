@@ -71,6 +71,7 @@ SamplerState linearSampler : register(s0);
 //-----------------------------------------------------------------
 
 FragmentOutputPacket main(FragmentInputPacket v) {
+
 	FragmentOutputPacket outputFragment;
 
 	float3 N = normalize(v.normalW);

@@ -50,7 +50,7 @@ class Scene{// : public GUObject {
 	ParticleSystem* fire = nullptr;
 	ParticleSystem* smoke = nullptr;
 	float									treeHeight = 0;
-	float									grassLength = 0.01f;
+	float									grassLength = 0.02f;
 	int										numGrassPasses = 50;
 
 	bool wKey = false;

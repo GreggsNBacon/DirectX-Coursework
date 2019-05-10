@@ -31,6 +31,7 @@ struct vertexInputPacket {
 
 	float3				pos			: POSITION;
 	float3				normal		: NORMAL;
+	float3				tangent		: TANGENT;
 	float4				matDiffuse	: DIFFUSE; // a represents alpha.
 	float4				matSpecular	: SPECULAR;  // a represents specular power. 
 	float2				texCoord	: TEXCOORD;
@@ -44,6 +45,7 @@ struct vertexOutputPacket {
 	float3				posW			: POSITION;
 	// Normal in world coords
 	float3				normalW			: NORMAL;
+	float3				tangent			: TANGENT;
 	float4				matDiffuse		: DIFFUSE;
 	float4				matSpecular		: SPECULAR;
 	float2				texCoord		: TEXCOORD;
@@ -70,6 +72,7 @@ vertexOutputPacket main(vertexInputPacket inputVertex) {
 	outputVertex.matSpecular = inputVertex.matSpecular;
 	// .. and texture coordinates.
 	outputVertex.texCoord = inputVertex.texCoord;
+	outputVertex.tangent = mul(float4(inputVertex.pos, 1.0f), WVP);
 	// Finally transform/project pos to screen/clip space posH
 	outputVertex.posH = mul(float4(inputVertex.pos, 1.0f), WVP);
 

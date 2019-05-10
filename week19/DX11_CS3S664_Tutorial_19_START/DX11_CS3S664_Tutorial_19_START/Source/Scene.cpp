@@ -172,7 +172,8 @@ HRESULT Scene::initialiseSceneResources() {
 	// Add logs
 	// The Model class is derived from the BaseModel class with an additional load method that loads 3d data from a file
 	// The load method makes use of the ASSIMP (open ASSet IMPort) Library for loading 3d data http://assimp.sourceforge.net/.
-	Material logMat; logMat.setSpecular(XMCOLOR(0, 0, 0, 0));
+	Material logMat; 
+	logMat.setSpecular(XMCOLOR(0, 0, 0, 0));
 	Material *logMatArray[] = { &logMat };
 	logs = new  Model(device, wstring(L"Resources\\Models\\logs.obj"), perPixelLightingEffect, logMatArray, 1, logsTextureArray, 1);
 	//Scale logs
@@ -180,12 +181,10 @@ HRESULT Scene::initialiseSceneResources() {
 	logs->update(context);
 
 	fire = new ParticleSystem(device, fireEffect, NULL, 0, fireTextureArray, 1);
-	//scale and position fire
 	fire->setWorldMatrix(fire->getWorldMatrix()*XMMatrixScaling(2, 4, 2)*XMMatrixTranslation(0, 2, 0));
 	fire->update(context);
 
 	smoke = new ParticleSystem(device, smokeEffect, NULL, 0, smokeTextureArray, 1);
-	//scale and position fire
 	smoke->setWorldMatrix(smoke->getWorldMatrix()*XMMatrixScaling(4, 8, 4)*XMMatrixTranslation(0, 5, 0));
 	smoke->update(context);
 

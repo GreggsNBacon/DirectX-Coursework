@@ -237,7 +237,6 @@ HRESULT Model::loadModel(ID3D11Device *device, const std::wstring& filename)
 
 				vptr->pos = XMFLOAT3(R.V[k].x, R.V[k].y, R.V[k].z);
 				vptr->normal = XMFLOAT3(R.Vn[k].x, R.Vn[k].y, R.Vn[k].z);
-
 				//Flip normal.x for OBJ & GSF (might be required for other files too?)
 				if (0 == ext.compare(L".obj") || 0 == ext.compare(L".gsf"))// || 0 == ext.compare(L".3ds")
 				{
@@ -409,6 +408,7 @@ HRESULT Model::loadModelAssimp(ID3D11Device *device, const std::wstring& filenam
 						aiVector3D pos = mesh->mVertices[face.mIndices[k]];
 						aiVector3D uv = mesh->mTextureCoords[0][face.mIndices[k]];
 						aiVector3D normal = mesh->HasNormals() ? mesh->mNormals[face.mIndices[k]] : aiVector3D(1.0f, 1.0f, 1.0f);
+						aiVector3D tangent = mesh->HasTangentsAndBitangents() ? mesh->mBitangents[face.mIndices[k]] : aiVector3D(1.0f, 1.0f, 1.0f);
 						//Flip normal.x for OBJ & GSF (might be required for other files too?)
 						if (0 == ext.compare(L".obj") || 0 == ext.compare(L".gsf"))// || 0 == ext.compare(L".3ds")
 						{
@@ -419,6 +419,7 @@ HRESULT Model::loadModelAssimp(ID3D11Device *device, const std::wstring& filenam
 						}
 						vptr[VIndex].pos = XMFLOAT3(pos.x, pos.y, pos.z);
 						vptr[VIndex].normal = XMFLOAT3(normal.x, normal.y, normal.z);
+						vptr[VIndex].tangent = XMFLOAT3(normal.x, normal.y, normal.z);
 						vptr[VIndex].texCoord = XMFLOAT2(uv.x, 1-uv.y);
 						vptr[VIndex].matDiffuse = material->getColour()->diffuse;//XMCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 						vptr[VIndex].matSpecular = material->getColour()->specular;// XMCOLOR(1.0f, 1.0f, 1.0f, 1.0f);

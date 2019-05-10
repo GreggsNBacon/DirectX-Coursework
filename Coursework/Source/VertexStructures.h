@@ -23,6 +23,7 @@ struct ExtendedVertexStruct {
 	DirectX::PackedVector::XMCOLOR		matDiffuse;
 	DirectX::PackedVector::XMCOLOR		matSpecular;
 	DirectX::XMFLOAT2					texCoord;
+	DirectX::XMFLOAT3					tangent;
 };
 
 // Vertex input descriptor based on ExtendedVertexStruct
@@ -31,7 +32,8 @@ static const D3D11_INPUT_ELEMENT_DESC extVertexDesc[] = {
 	{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	{ "DIFFUSE", 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	{ "SPECULAR", 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 };
 
 struct ParticleVertexStruct {

@@ -44,6 +44,7 @@ struct FragmentInputPacket {
 	float3				posW			: POSITION;
 	// Normal in world coords
 	float3				normalW			: NORMAL;
+	float3				tangent			:TANGENT;
 	float4				matDiffuse		: DIFFUSE; // a represents alpha.
 	float4				matSpecular		: SPECULAR; // a represents specular power. 
 	float2				texCoord		: TEXCOORD;
@@ -63,6 +64,7 @@ struct FragmentOutputPacket {
 
 // Assumes texture bound to texture t0 and sampler bound to sampler s0
 Texture2D diffuseTexture : register(t0);
+Texture2D normalTexture : register(t1);
 SamplerState linearSampler : register(s0);
 
 
@@ -76,28 +78,38 @@ FragmentOutputPacket main(FragmentInputPacket v) {
 
 	float3 N = normalize(v.normalW);
 	float4 baseColour = v.matDiffuse;
-	baseColour = baseColour * diffuseTexture.Sample(linearSampler, v.texCoord);
-	//Initialise returned colour to ambient component
-	float3 colour = baseColour.xyz * lightAmbient;
-	// Calculate the lambertian term (essentially the brightness of the surface point based on the dot product of the normal vector with the vector pointing from v to the light source's location)
 	float3 lightDir = -lightVec.xyz; // Directional light
-	if (lightVec.w == 1.0) lightDir = lightVec.xyz - v.posW; // Positional light
+	if (lightVec.w == 1.0) lightDir = lightVec.xyz - v.posW;
 	lightDir = normalize(lightDir);
-	// Add diffuse light if relevant (otherwise we end up just returning the ambient light colour)
-	// Add Code Here (Add diffuse light calculation)
-	colour += max(dot(lightDir, N), 0.0f) * baseColour.xyz * lightDiffuse;
+	baseColour = diffuseTexture.Sample(linearSampler, v.texCoord);
 
-	// Calc specular light
+	//Load normal from normal map
+	float4 normalMap = normalTexture.Sample(linearSampler, v.texCoord);
+	//Change normal map range from [0, 1] to [-1, 1]
+	normalMap = (2.0f * normalMap) - 1.0f;
+	//Make sure tangent is completely orthogonal to normal
+	v.tangent = normalize(v.tangent - dot(v.tangent, N) * N);
+	//Create the biTangent
+	float3 biTangent = cross(N, v.tangent);
+	//Create the "Texture Space"
+	float3x3 texSpace = float3x3(v.tangent, biTangent, N);
+	//Convert normal from normal map to texture space and store in input.normal
+	N = normalize(mul(normalMap, texSpace));
+	float3 finalColor;
+
+
+	//specular
 	float specPower = max(v.matSpecular.a * 1000.0, 1.0f);
-
 	float3 eyeDir = normalize(eyePos - v.posW);
 	float3 R = reflect(-lightDir, N);
-
-	// Add Code Here (Specular Factor calculation)	
 	float specFactor = pow(max(dot(R, eyeDir), 0.0f), specPower);
-	colour += specFactor * v.matSpecular.xyz * lightSpecular;
 
-	outputFragment.fragmentColour = float4(colour, baseColour.a);
+
+	finalColor = baseColour.xyz * lightAmbient;
+	finalColor +=  max(dot(lightDir, N), 0.0f) * lightDiffuse * baseColour.xyz;
+	finalColor += specFactor * v.matSpecular.xyz * lightSpecular;
+	outputFragment.fragmentColour = float4(finalColor, baseColour.a);
 	return outputFragment;
-
 }
+
+
